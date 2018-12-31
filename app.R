@@ -107,6 +107,7 @@ server <- function(input, output) {
     fluidPage(
       h2("rollArea"),
       if (nrow(rval$rollArea)) do.call(fluidRow, rval$diceRolled()),
+      htmlOutput("errmsg2"),
       if (length(rval$savedSelectionSets)) h2("savedArea"),
       if (length(rval$savedSelectionSets)) renderTable({
         M <- plyr::ldply(rval$savedSelectionSets, rbind)
@@ -132,12 +133,20 @@ server <- function(input, output) {
     isolate({
       if (!attr(rval$turn, "firstroll")) {
         if (length(rval$selectionSet) < 1L) {
-          output$errmsg1 <- renderText("A pointed die must be selected")
+          output$errmsg2 <- renderText(
+            paste("<span style=\"color:red\">At least one pointed die must be selected.</span>"))
           return()
         }
       }
+      z <- attr(score(rval$selectionSet), "diceremaining")
+      if (length(z)) {
+        output$errmsg2 <- renderText(
+          paste("<span style=\"color:red\">All dice selected must contain points.</span>"))
+        return()
+      }
     })
     output$errmsg1 <- NULL
+    output$errmsg2 <- NULL
     attr(rval$turn, "firstroll") <- FALSE
     add_selectionSet_to_savedSelectionSets()
     initialize_selectionSet()
