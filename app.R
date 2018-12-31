@@ -32,14 +32,18 @@ ui <- fluidPage(
    
    sidebarLayout(
       sidebarPanel(
-#        actionButton("newplayer", "New Player")
-#        , actionButton("newturn", "New Turn")
-#        , br()
-        actionButton("roll", "Roll")
-#        , actionButton("endturn", "End Turn")
+        actionButton("newplayer", "New Player")
+        , actionButton("newturn", "New Turn")
+        , br()
+        , actionButton("roll", "Roll")
+        , actionButton("endturn", "End Turn")
         , h2("Score")
+        , h3("Roll Area")
+        , verbatimTextOutput("scoreRollArea")
         , h3("Picked")
         , verbatimTextOutput("scorePicked")
+        , h3("Not Picked")
+        , verbatimTextOutput("scoreNotPicked")
         , h3("Saved")
         , verbatimTextOutput("scoreSaved")
         , h3("On Table (= 'turn')")
@@ -79,7 +83,15 @@ server <- function(input, output) {
     color = character(0)
   )
   output$errmsg1 <- NULL
-  output$scorePicked <- renderText(score(rval$selectionSet))
+  output$scoreRollArea <- renderText({
+    score(rval$rollArea$v)})
+  output$scorePicked <- renderText({
+    score(rval$selectionSet)})
+  output$scoreNotPicked <- renderText({
+    ndx <- attr(rval$selectionSet, "index")
+    z <- rval$rollArea$v[-ndx]
+    score(z)
+  })
   output$scoreSaved <- renderText(score(rval$savedSelectionSets))
   output$scoreTable <- renderText(score(rval$selectionSet) + score(rval$savedSelectionSets))
   output$scorePlayerA <- renderText(score(rval$player))
