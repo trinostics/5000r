@@ -1,0 +1,55 @@
+---
+title: "5000 Rules"
+author: "dmm"
+date: "12/31/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+5000: A Dice Game
+
+Players take turns rolling dice. 
+The objective of the game is to be the first Player to score 5000 points.
+
+A Player’s Turn consists of a sequence of rolls starting with five dice. Rolled points are scored as follows:
+
+1.	An “ace” (a 1) is worth 100 points
+2.	A 5 is worth 50 points
+3.	Three of a kind is worth 100 times the number, with the exception that three aces are worth 1000 points.
+
+If no points are rolled,
+Player loses all accumulated points in the Turn and the dice pass to the next Player.
+
+If points are rolled, 
+Player must set aside some of those points 
+to be able to roll the remaining dice and accumulate more points.
+A minimum 300 points must be accumulated in a Turn to count towards Player's total score.
+Player may voluntarily end a Turn at any time. 
+
+## Special Rules
+
+Player’s first score posted in a game must be at least **500**.
+
+If the number of dice set aside by Player reaches five, 
+the next roll -- should Player elect to continue -- 
+is with five fresh dice.
+
+After the first Player is chosen randomly, play continues in clockwise order.
+
+## Examples of Turns
+
+Player | Dice Rolled | Points Rolled | Play | Turn Points
+-------|----------| ----------|--------------------------|---------------------
+A: roll #1 | 5, 3, 2, 4, 6 | 50 | Player sets aside the 5. | 50
+A: roll #2 | 4, 3, 4, 4 | 400 | Player sets aside the three 4’s. Player has not yet posted a score in Game, so Turn must continue because accumulated points < 500. | 450
+A: roll #3 | 5 | 50 | Player sets aside the 5 and stops Turn. | 500
+B: roll #1 | 1, 5, 1, 5, 4 | 300 | If Player has posted once in Game, Player could stop. But Player is risky, sets aside the 1’s and 5’s and rolls again with just one die. | 300
+B: roll #2 | 6 | 0 | Player’s Turn ends because no points were scored in this roll. | 0
+C: roll #1 | 1, 5, 1, 5, 4 | 300 | Player sets aside the two aces. Note that not all scored dice must be set aside. | 200
+C: roll #2 | 3, 3, 3 | 300 | Player sets aside the 3’s. Player chooses not to stop and Turn continues with five fresh dice. | 500 
+C: roll #3 | 5, 6, 1, 2, 2	| 150 | Player sets aside the 5 and 1 and stops Turn. | 650
+
+
