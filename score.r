@@ -34,12 +34,13 @@ score.turn <- function(x) ifelse(length(x), sum(sapply(x, score)), 0L)
 score.player <- function(x) ifelse(length(x), sum(sapply(x, score)), 0L)
 score.NULL <- function(x) 0L
 
-assign("score", score, envir = .GlobalEnv)
-assign("score.integer", score.integer, envir = .GlobalEnv)
-assign("score.selectionSet", score.selectionSet, envir = .GlobalEnv)
-assign("score.list", score.list, envir = .GlobalEnv)
-assign("score.savedSelectionSets", score.savedSelectionSets, envir = .GlobalEnv)
-assign("score.turn", score.turn, envir = .GlobalEnv)
-assign("score.player", score.player, envir = .GlobalEnv)
-assign("score.NULL", score.NULL, envir = .GlobalEnv)
+list2env(list(score = score,
+              score.integer = score.integer,
+              score.selectionSet = score.selectionSet,
+              score.list = score.list,
+              score.savedSelectionSets = score.savedSelectionSets,
+              score.turn = score.turn,
+              score.player = score.player,
+              score.NULL = score.NULL),
+         envir = .GlobalEnv)
 
