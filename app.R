@@ -1,0 +1,253 @@
+library(shiny)
+
+score <- function(x) UseMethod("score", x)
+score.integer <- function(x) {
+  score <- 0
+  # Pull out any three-of-a-kinds
+  for (i in 1:6) {
+    ndx <- x == i
+    triple <- sum(ndx) >= 3
+    if (triple) break
+  }
+  if (triple) {
+    score <- score + ifelse(i == 1, 1000, i * 100)
+    w <- which(ndx)
+    x <- x[-w[1:3]]
+  }
+  # pull out aces
+  w <- which(x == 1L)
+  if (l <- length(w)) {
+    score <- score + l * 100
+    x <- x[-w]
+  }
+  # pull out fives
+  w <- which(x == 5L)
+  if (l <- length(w)) {
+    score <- score + l * 50
+    x <- x[-w]
+  }
+  attr(score, "diceremaining") <- x
+  score
+}
+score.selectionSet <- function(x) score(c(x))
+score.list <- function(x) 0L
+score.savedSelectionSets <- function(x) ifelse(length(x), sum(sapply(x, score)), 0L)
+score.turn <- function(x) ifelse(length(x), sum(sapply(x, score)), 0L)
+score.player <- function(x) ifelse(length(x), sum(sapply(x, score)), 0L)
+score.NULL <- function(x) 0L
+
+assign("score", score, envir = .GlobalEnv)
+assign("score.integer", score.integer, envir = .GlobalEnv)
+assign("score.selectionSet", score.selectionSet, envir = .GlobalEnv)
+assign("score.list", score.list, envir = .GlobalEnv)
+assign("score.savedSelectionSets", score.savedSelectionSets, envir = .GlobalEnv)
+assign("score.turn", score.turn, envir = .GlobalEnv)
+assign("score.player", score.player, envir = .GlobalEnv)
+assign("score.NULL", score.NULL, envir = .GlobalEnv)
+
+DODGERBLUE <- "1E90FF"
+pickColor <- c("1E90FF", #DODGERBLUE
+               "CD5C5C", #INDIANRED
+               "00FF7F", #SPRINGGREEN
+               "BA55D3", #MEDIUMORCHID
+               "BC8F8F"  #ROSYBROWN
+)
+
+new_selectionSet <- function(v = integer(0), index = seq_along(v), 
+                             color = rep(DODGERBLUE, length(v))) {
+  structure(v, index = index, color = color, class = "selectionSet")
+}
+
+new_turn <- function(x) {
+  structure(list(),
+            firstroll = TRUE,
+            class = "turn") # list of saved selection sets
+}
+new_player <- function(x, name = "A") {
+  structure(list(), 
+            name = name,
+            class = "player") # list of turns
+}
+
+ui <- fluidPage(
+   
+   titlePanel("5000 Dice Game"),
+   
+   sidebarLayout(
+      sidebarPanel(
+#        actionButton("newplayer", "New Player")
+#        , actionButton("newturn", "New Turn")
+#        , br()
+        actionButton("roll", "Roll")
+#        , actionButton("endturn", "End Turn")
+        , h2("Score")
+        , h3("Picked")
+        , verbatimTextOutput("scorePicked")
+        , h3("Saved")
+        , verbatimTextOutput("scoreSaved")
+        , h3("On Table (= 'turn')")
+        , verbatimTextOutput("scoreTable")
+        , h3("Player A")
+        , verbatimTextOutput("scorePlayerA")
+        , verbatimTextOutput("errmsg1")
+      ),
+      mainPanel(
+        uiOutput("playingSurface")
+      )
+   )
+
+)
+initialize_savedSelectionSets <- function(){
+  structure(list(), class = "savedSelectionSets")
+}
+
+server <- function(input, output) {
+  WHITE <- "FFFFFF"
+  NDICEFULLROLL <- 5
+  nDiceToRoll <- NDICEFULLROLL
+  DieSelectionColor <- "1E90FF" #DODGERBLUE
+  
+  rval <- reactiveValues()
+  
+  # first player and turn
+  rval$turn <- new_turn()
+  rval$player <- new_player(rval$turn, name = "A")
+
+  rval$selectionSet <- new_selectionSet()
+  rval$savedSelectionSets <- initialize_savedSelectionSets()
+  
+  rval$rollArea <- data.frame(
+    value = integer(0),
+    picked = logical(0),
+    color = character(0)
+  )
+  output$errmsg1 <- NULL
+  output$scorePicked <- renderText(score(rval$selectionSet))
+  output$scoreSaved <- renderText(score(rval$savedSelectionSets))
+  output$scoreTable <- renderText(score(rval$selectionSet) + score(rval$savedSelectionSets))
+  output$scorePlayerA <- renderText(score(rval$player))
+  rval$diceRolled <- reactive({
+    lapply(1:nrow(rval$rollArea), 
+      function(i) actionButton(inputId = paste0("d", i), 
+        label = img(src = paste0("D", rval$rollArea$value[i], ".jpg")),
+        style=paste0("background-color: #", rval$rollArea$color[i])
+        ))
+  })
+
+  output$playingSurface <- renderUI({
+    fluidPage(
+      h2("rollArea"),
+      if (nrow(rval$rollArea)) do.call(fluidRow, rval$diceRolled()),
+      if (length(rval$savedSelectionSets)) h2("savedArea"),
+      if (length(rval$savedSelectionSets)) renderTable({
+        M <- plyr::ldply(rval$savedSelectionSets, rbind)
+        M[is.na(M)] <- " "
+        colnames(M) <- paste0("D", seq(ncol(M)))
+        M
+        })
+      )
+
+  })
+  
+  observeEvent(input$newplayer, {
+    rval$player <- new_player("A")
+    add_player_to_Players(rval$player)
+  })
+
+  observeEvent(input$newturn, {
+    rval$turn <- new_turn(length(rval$player) + 1L)
+    add_turn_to_player(rval$turn)
+  })
+
+  observeEvent(input$roll, {
+    isolate({
+      if (!attr(rval$turn, "firstroll")) {
+        if (length(rval$selectionSet) < 1L) {
+          output$errmsg1 <- renderText("A pointed die must be selected")
+          return()
+        }
+      }
+    })
+    output$errmsg1 <- NULL
+    attr(rval$turn, "firstroll") <- FALSE
+    add_selectionSet_to_savedSelectionSets()
+    initialize_selectionSet()
+    v <- 1:nDiceToRoll #sample.int(6, nDiceToRoll, TRUE)
+    rval$rollArea <- data.frame(
+      value = v,
+      picked = FALSE,
+      color = WHITE,
+      stringsAsFactors = FALSE
+    )
+    rval$valuesRolled <- v
+  })
+  observeEvent(input$endturn, {
+    add_selectionSet_to_savedSelectionSets()
+    rval$rollArea <- data.frame(
+      value = integer(0),
+      picked = logical(0),
+      color = character(0)
+    )
+    rval$selectionSet <- new_selectionSet()
+  })
+  
+  observeEvent(input$d1, pickedADie(1))
+  observeEvent(input$d2, pickedADie(2))
+  observeEvent(input$d3, pickedADie(3))
+  observeEvent(input$d4, pickedADie(4))
+  observeEvent(input$d5, pickedADie(5))
+  
+  pickedADie <- function(picked) {
+
+    nDiceToRoll <<- nDiceToRoll + ifelse(rval$rollArea$picked[picked],
+                                         1L, -1L)
+    if (nDiceToRoll < 1L) nDiceToRoll <<- NDICEFULLROLL
+    rval$rollArea$picked[picked] <- !rval$rollArea$picked[picked]
+    rval$rollArea$color[picked] <- ifelse(rval$rollArea$picked[picked],
+                                          DODGERBLUE, WHITE)
+    if (rval$rollArea$picked[picked]) add_Die_to_selectionSet(picked)
+    else remove_Die_from_selectionSet(picked)
+  }
+
+  add_selectionSet_to_savedSelectionSets <- function(){
+    if (length(rval$selectionSet)) 
+      rval$savedSelectionSets[[length(rval$savedSelectionSets) + 1]] <- rval$selectionSet
+  }
+  initialize_selectionSet <- function() {
+    rval$selectionSet <- new_selectionSet()
+  }
+  add_Die_to_selectionSet <- function(picked) {
+    rval$selectionSet <- if (length(rval$selectionSet)) new_selectionSet(
+      c(c(rval$selectionSet), rval$valuesRolled[picked]),
+      index = c(attr(rval$selectionSet, "index"), picked),
+      color = attr(rval$selectionSet, "color"))
+    else new_selectionSet(
+      rval$valuesRolled[picked],
+      index = picked,
+      color = DODGERBLUE)
+  }
+  remove_Die_from_selectionSet <- function(picked) {
+    w <- which(attr(rval$selectionSet, "index") == picked)
+    rval$selectionSet <- new_selectionSet(
+      rval$selectionSet[-w],
+      index = attr(rval$selectionSet, "index")[-w],
+      color = attr(rval$selectionSet, "color")[-w]
+    )
+  }
+  
+  add_player_to_Players <- function(p) {
+    playernames <- sapply(rval$Players, function(x) attr(x, "name"))
+    nam <- attr(p, "name")
+#    if (nam %in% playernames) stop(nam, "already a player")
+    rval$Players[[length(rval$Players) + 1L]] <- p
+  }
+  
+  add_turn_to_player <- function(x) {
+    rval$player[[length(rval$player) + 1L]] <- x
+  }
+  
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
