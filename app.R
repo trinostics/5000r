@@ -83,10 +83,8 @@ server <- function(input, output) {
     color = character(0)
   )
   output$errmsg1 <- NULL
-  output$scoreRollArea <- renderText({
-    score(rval$rollArea$v)})
-  output$scorePicked <- renderText({
-    score(rval$selectionSet)})
+  output$scoreRollArea <- renderText({score(rval$rollArea$v)})
+  output$scorePicked <- renderText({score(rval$selectionSet)})
   output$scoreNotPicked <- renderText({
     ndx <- attr(rval$selectionSet, "index")
     z <- rval$rollArea$v[-ndx]
@@ -104,10 +102,7 @@ server <- function(input, output) {
   })
 
   output$playingSurface <- renderUI({
-    print(paste("length(rval$savedSelectionSets)=", length(rval$savedSelectionSets)))
-#    print(nDiceToRoll)
-    if (length(rval$savedSelectionSets) > 0)
-    {fluidPage(
+    fluidPage(
       h2("rollArea"),
       if (nrow(rval$rollArea)) do.call(fluidRow, rval$diceRolled()),
       htmlOutput("errmsg2"),
@@ -115,21 +110,13 @@ server <- function(input, output) {
       if (length(rval$savedSelectionSets)) renderTable({
         M <- plyr::ldply(rval$savedSelectionSets, rbind)
         M[is.na(M)] <- " "
-print(ncol(M))
-print(seq(ncol(M)))
-print(M)
-        if (ncol(M)) colnames(M) <- paste0("D", seq(ncol(M)))
+#        if (ncol(M)) 
+          colnames(M) <- paste0("D", seq(ncol(M)))
         M
         })
-      )}
-    else {
-      fluidPage(
-        h2("rollArea"),
-        if (nrow(rval$rollArea)) do.call(fluidRow, rval$diceRolled()),
-        htmlOutput("errmsg2"))
-    }
-  })
-  
+      )
+    })
+
   observeEvent(input$newplayer, {
     rval$player <- new_player("A")
     add_player_to_Players(rval$player)
@@ -179,7 +166,7 @@ print(M)
       color = character(0)
     )
     rval$selectionSet <- new_selectionSet()
-    rval$savedSelectionSets <- initialize_savedSelectionSets()
+#    rval$savedSelectionSets <- initialize_savedSelectionSets()
     nDiceToRoll <- NDICEFULLROLL
   })
   
