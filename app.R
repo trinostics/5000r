@@ -51,7 +51,7 @@ ui <- fluidPage(
         , verbatimTextOutput("scoreTable")
         , h3("Player A")
         , verbatimTextOutput("scorePlayerA")
-        , verbatimTextOutput("errmsg1")
+        , verbatimTextOutput("numturns")
       ),
       mainPanel(
         uiOutput("playingSurface")
@@ -94,6 +94,7 @@ server <- function(input, output) {
   output$scoreSaved <- renderText(score(rval$savedSelectionSets))
   output$scoreTable <- renderText(score(rval$selectionSet) + score(rval$savedSelectionSets))
   output$scorePlayerA <- renderText(score(rval$player))
+  output$numturns <- renderText(length(rval$player))
   rval$diceRolled <- reactive({
     lapply(1:nrow(rval$rollArea), 
       function(i) actionButton(inputId = paste0("d", i), 
@@ -149,7 +150,7 @@ server <- function(input, output) {
     attr(rval$turn, "firstroll") <- FALSE
     add_selectionSet_to_savedSelectionSets()
     initialize_selectionSet()
-    v <- 1:nDiceToRoll #sample.int(6, nDiceToRoll, TRUE)
+    v <- sample.int(6, nDiceToRoll, TRUE) #1:nDiceToRoll 
     rval$rollArea <- data.frame(
       value = v,
       picked = FALSE,
@@ -195,7 +196,7 @@ server <- function(input, output) {
   observeEvent(input$d5, pickedADie(5))
   
   pickedADie <- function(picked) {
-output$errmsg2 <- NULL
+    output$errmsg2 <- NULL
     nDiceToRoll <<- nDiceToRoll + ifelse(rval$rollArea$picked[picked],
                                          1L, -1L)
     if (nDiceToRoll < 1L) nDiceToRoll <<- NDICEFULLROLL
