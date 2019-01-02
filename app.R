@@ -160,6 +160,20 @@ server <- function(input, output) {
     rval$valuesRolled <- v
   })
   observeEvent(input$endturn, {
+    if (score(rval$rollArea$v) == 0) { # zilch!
+      rval$rollArea <- data.frame(
+        value = integer(0),
+        picked = logical(0),
+        color = character(0)
+      )
+      nDiceToRoll <<- NDICEFULLROLL
+      rval$selectionSet <- new_selectionSet()
+      rval$savedSelectionSets <- initialize_savedSelectionSets()
+      rval$turn <- new_turn()
+      add_Turn_to_Player()
+      output$errmsg2 <- NULL
+      return()
+    }
     if (attr(rval$player, "scoredYet")){
       if (score(rval$savedSelectionSets) + score(rval$selectionSet) < 300) {
         output$errmsg2 <- renderText(
@@ -174,7 +188,6 @@ server <- function(input, output) {
         return()
       }
     add_selectionSet_to_savedSelectionSets()
-    print(score(rval$savedSelectionSets))
     attr(rval$player, "scoredYet") <- TRUE
     add_savedSelectionSets_to_Turn()
     add_Turn_to_Player()
