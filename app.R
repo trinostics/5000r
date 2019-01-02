@@ -65,7 +65,7 @@ initialize_savedSelectionSets <- function() {
 server <- function(input, output) {
   WHITE <- "FFFFFF"
   NDICEFULLROLL <- 5
-  nDiceToRoll <- NDICEFULLROLL
+  nDiceToRoll <<- NDICEFULLROLL
   DieSelectionColor <- "1E90FF" #DODGERBLUE
   
   rval <- reactiveValues()
@@ -108,10 +108,9 @@ server <- function(input, output) {
       htmlOutput("errmsg2"),
       if (length(rval$savedSelectionSets)) h2("savedArea"),
       if (length(rval$savedSelectionSets)) renderTable({
-        M <- plyr::ldply(rval$savedSelectionSets, rbind)
+        M <- plyr::ldply(isolate(rval$savedSelectionSets), rbind)
         M[is.na(M)] <- " "
-#        if (ncol(M)) 
-          colnames(M) <- paste0("D", seq(ncol(M)))
+        colnames(M) <- paste0("D", seq(ncol(M)))
         M
         })
       )
@@ -129,6 +128,7 @@ server <- function(input, output) {
   observeEvent(input$roll, {
     isolate({
       if (!attr(rval$turn, "firstroll")) {
+        # If already rolled once this turn, cannot roll again without picking something
         if (length(rval$selectionSet) < 1L) {
           output$errmsg2 <- renderText(
             paste("<span style=\"color:red\">At least one pointed die must be selected.</span>"))
@@ -165,9 +165,10 @@ server <- function(input, output) {
       picked = logical(0),
       color = character(0)
     )
+    nDiceToRoll <<- NDICEFULLROLL
     rval$selectionSet <- new_selectionSet()
-#    rval$savedSelectionSets <- initialize_savedSelectionSets()
-    nDiceToRoll <- NDICEFULLROLL
+    rval$savedSelectionSets <- initialize_savedSelectionSets()
+    rval$turn <- new_turn()
   })
   
   observeEvent(input$d1, pickedADie(1))
