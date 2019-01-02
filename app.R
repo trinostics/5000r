@@ -23,6 +23,7 @@ new_turn <- function() {
 new_player <- function(x, name = "A") {
   structure(list(), 
             name = name,
+            scoredYet = FALSE,
             class = "player") # list of turns
 }
 
@@ -33,7 +34,7 @@ ui <- fluidPage(
    sidebarLayout(
       sidebarPanel(
         actionButton("newplayer", "New Player")
-        , actionButton("newturn", "New Turn")
+#        , actionButton("newturn", "New Turn")
         , br()
         , actionButton("roll", "Roll")
         , actionButton("endturn", "End Turn")
@@ -136,6 +137,7 @@ server <- function(input, output) {
         }
       }
       z <- attr(score(rval$selectionSet), "diceremaining")
+      # "diceremaining" are the dice in selectionSet that do not contribute to the score
       if (length(z)) {
         output$errmsg2 <- renderText(
           paste("<span style=\"color:red\">All dice selected must contain points.</span>"))
@@ -157,7 +159,22 @@ server <- function(input, output) {
     rval$valuesRolled <- v
   })
   observeEvent(input$endturn, {
+    if (attr(rval$player, "scoredYet")){
+      if (score(rval$savedSelectionSets) + score(rval$selectionSet) < 300) {
+        output$errmsg2 <- renderText(
+          paste("<span style=\"color:red\">You must score at least 300 to end turn.</span>"))
+        return()
+      }
+    }
+    else
+      if (score(rval$savedSelectionSets) + score(rval$selectionSet) < 500) {
+        output$errmsg2 <- renderText(
+          paste("<span style=\"color:red\">You must first score at least 500 to end turn.</span>"))
+        return()
+      }
     add_selectionSet_to_savedSelectionSets()
+    print(score(rval$savedSelectionSets))
+    attr(rval$player, "scoredYet") <- TRUE
     add_savedSelectionSets_to_Turn()
     add_Turn_to_Player()
     rval$rollArea <- data.frame(
@@ -178,7 +195,7 @@ server <- function(input, output) {
   observeEvent(input$d5, pickedADie(5))
   
   pickedADie <- function(picked) {
-
+output$errmsg2 <- NULL
     nDiceToRoll <<- nDiceToRoll + ifelse(rval$rollArea$picked[picked],
                                          1L, -1L)
     if (nDiceToRoll < 1L) nDiceToRoll <<- NDICEFULLROLL
