@@ -34,8 +34,12 @@ Player may voluntarily end a Turn at any time.
 Player’s first score posted in a game must be at least **500**.
 
 If the number of dice set aside by Player reaches five, 
-the next roll -- should Player elect to continue -- 
-is with five fresh dice.
+the next roll -- should Player not elect to end Turn -- 
+continues with five fresh dice.
+
+All dice selected to be set aside must contribute points.
+Otherwise, Player could always roll 5 dice and thereby increase the
+odds of scoring on each roll.
 
 After the first Player is chosen randomly, play continues in clockwise order.
 
