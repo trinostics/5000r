@@ -15,7 +15,7 @@ new_selectionSet <- function(v = integer(0), index = seq_along(v),
   structure(v, index = index, color = color, class = "selectionSet")
 }
 
-new_turn <- function(x) {
+new_turn <- function() {
   structure(list(),
             firstroll = TRUE,
             class = "turn") # list of saved selection sets
@@ -58,7 +58,7 @@ ui <- fluidPage(
    )
 
 )
-initialize_savedSelectionSets <- function(){
+initialize_savedSelectionSets <- function() {
   structure(list(), class = "savedSelectionSets")
 }
 
@@ -104,7 +104,10 @@ server <- function(input, output) {
   })
 
   output$playingSurface <- renderUI({
-    fluidPage(
+    print(paste("length(rval$savedSelectionSets)=", length(rval$savedSelectionSets)))
+#    print(nDiceToRoll)
+    if (length(rval$savedSelectionSets) > 0)
+    {fluidPage(
       h2("rollArea"),
       if (nrow(rval$rollArea)) do.call(fluidRow, rval$diceRolled()),
       htmlOutput("errmsg2"),
@@ -112,11 +115,19 @@ server <- function(input, output) {
       if (length(rval$savedSelectionSets)) renderTable({
         M <- plyr::ldply(rval$savedSelectionSets, rbind)
         M[is.na(M)] <- " "
-        colnames(M) <- paste0("D", seq(ncol(M)))
+print(ncol(M))
+print(seq(ncol(M)))
+print(M)
+        if (ncol(M)) colnames(M) <- paste0("D", seq(ncol(M)))
         M
         })
-      )
-
+      )}
+    else {
+      fluidPage(
+        h2("rollArea"),
+        if (nrow(rval$rollArea)) do.call(fluidRow, rval$diceRolled()),
+        htmlOutput("errmsg2"))
+    }
   })
   
   observeEvent(input$newplayer, {
@@ -125,8 +136,7 @@ server <- function(input, output) {
   })
 
   observeEvent(input$newturn, {
-    rval$turn <- new_turn(length(rval$player) + 1L)
-    add_turn_to_player(rval$turn)
+    rval$turn <- new_turn()
   })
 
   observeEvent(input$roll, {
@@ -161,12 +171,16 @@ server <- function(input, output) {
   })
   observeEvent(input$endturn, {
     add_selectionSet_to_savedSelectionSets()
+    add_savedSelectionSets_to_Turn()
+    add_Turn_to_Player()
     rval$rollArea <- data.frame(
       value = integer(0),
       picked = logical(0),
       color = character(0)
     )
     rval$selectionSet <- new_selectionSet()
+    rval$savedSelectionSets <- initialize_savedSelectionSets()
+    nDiceToRoll <- NDICEFULLROLL
   })
   
   observeEvent(input$d1, pickedADie(1))
@@ -213,6 +227,10 @@ server <- function(input, output) {
     )
   }
   
+  add_savedSelectionSets_to_Turn <- function() {
+    n <- length(rval$turn)
+    rval$turn[[n+1]] <- rval$savedSelectionSets
+  }
   add_player_to_Players <- function(p) {
     playernames <- sapply(rval$Players, function(x) attr(x, "name"))
     nam <- attr(p, "name")
@@ -220,8 +238,8 @@ server <- function(input, output) {
     rval$Players[[length(rval$Players) + 1L]] <- p
   }
   
-  add_turn_to_player <- function(x) {
-    rval$player[[length(rval$player) + 1L]] <- x
+  add_Turn_to_Player <- function() {
+    rval$player[[length(rval$player) + 1L]] <- rval$turn
   }
   
 }
