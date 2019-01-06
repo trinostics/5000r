@@ -67,6 +67,7 @@ server <- function(input, output) {
   WHITE <- "FFFFFF"
   NDICEFULLROLL <- 5
   nDiceToRoll <<- NDICEFULLROLL
+  WINNINGSCORE <- 5000
   DieSelectionColor <- "1E90FF" #DODGERBLUE
   
   rval <- reactiveValues()
@@ -199,6 +200,15 @@ server <- function(input, output) {
     nDiceToRoll <<- NDICEFULLROLL
     rval$selectionSet <- new_selectionSet()
     rval$savedSelectionSets <- initialize_savedSelectionSets()
+    if (score(rval$player) >= WINNINGSCORE) {
+      output$errmsg2 <- renderText(paste(
+        "<span style=\"color:blue; font-size:large\">Player", 
+        attr(rval$player, "name"),
+        "is the winner in ", 
+        length(rval$player),
+        ifelse(length(rval$player) > 1L, "turns</span>", "turn! Wow!!!</span>")
+      ))
+    }
     rval$turn <- new_turn()
   })
   
