@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyjs)
 
 source("score.r")
 
@@ -28,6 +29,8 @@ new_player <- function(x, name = "A") {
 }
 
 ui <- fluidPage(
+  includeScript(file.path("www", "enter_button.js")),
+  useShinyjs(),
    
    titlePanel("5000 Dice Game"),
    
