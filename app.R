@@ -36,12 +36,12 @@ ui <- fluidPage(
    
    sidebarLayout(
       sidebarPanel(
-        actionButton("newplayer", "New Player")
+#        actionButton("newplayer", "New Player")
 #        , actionButton("newturn", "New Turn")
-        , br()
-        , actionButton("roll", "Roll")
-        , actionButton("endturn", "End Turn")
-        , h2("Score")
+#        , br()
+#        , actionButton("roll", "Roll")
+#        , actionButton("endturn", "End Turn")
+        h2("Score")
         , h3("Roll Area")
         , verbatimTextOutput("scoreRollArea")
         , h3("Picked")
@@ -54,6 +54,7 @@ ui <- fluidPage(
         , verbatimTextOutput("scoreTable")
         , h3("Player A")
         , verbatimTextOutput("scorePlayerA")
+        , p("# turns")
         , verbatimTextOutput("numturns")
       ),
       mainPanel(
@@ -110,6 +111,12 @@ server <- function(input, output) {
   output$playingSurface <- renderUI({
     fluidPage(
       h2("rollArea"),
+      actionButton("roll", "Roll"),
+      actionButton("endturn", "End Turn"), 
+      ifelse(nrow(rval$rollArea), 
+             ifelse(score(rval$valuesRolled), "Select dice", "No points. Click End Turn"), 
+             "click Roll"),
+      br(),
       if (nrow(rval$rollArea)) do.call(fluidRow, rval$diceRolled()),
       htmlOutput("errmsg2"),
       if (length(rval$savedSelectionSets)) h2("savedArea"),
