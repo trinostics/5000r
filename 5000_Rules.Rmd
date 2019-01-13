@@ -2,7 +2,9 @@
 title: "5000 Rules"
 author: "dmm"
 date: "12/31/2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -46,7 +48,7 @@ After the first Player is chosen randomly, play continues in clockwise order.
 ## Examples of Turns
 
 Player | Dice Rolled | Points Rolled | Play | Turn Points
--------|----------| ----------|--------------------------|---------------------
+---------|----------| ----------|--------------------------|---------------------
 A: roll #1 | 5, 3, 2, 4, 6 | 50 | Player sets aside the 5. | 50
 A: roll #2 | 4, 3, 4, 4 | 400 | Player sets aside the three 4’s. Player has not yet posted a score in Game, so Turn must continue because accumulated points < 500. | 450
 A: roll #3 | 5 | 50 | Player sets aside the 5 and stops Turn. | 500
