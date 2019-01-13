@@ -71,7 +71,7 @@ server <- function(input, output) {
   WHITE <- "FFFFFF"
   NDICEFULLROLL <- 5
   nDiceToRoll <<- NDICEFULLROLL
-  WINNINGSCORE <- 5000
+  WINNINGSCORE <- 3000
   DieSelectionColor <- "1E90FF" #DODGERBLUE
   
   rval <- reactiveValues()
@@ -103,8 +103,14 @@ server <- function(input, output) {
   rval$diceRolled <- reactive({
     lapply(1:nrow(rval$rollArea), 
       function(i) actionButton(inputId = paste0("d", i), 
-        label = img(src = paste0("D", rval$rollArea$value[i], ".jpg")),
-        style=paste0("background-color: #", rval$rollArea$color[i])
+        label = 
+#          img(src = paste0(
+#          "D", 
+#          "https://github.com/trinostics/5000r/raw/master/www/D",
+#          rval$rollArea$value[i], 
+#          ".JPG"))
+  rval$rollArea$value[i],
+style=paste0("background-color: #", rval$rollArea$color[i])
         ))
   })
 
